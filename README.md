@@ -1,32 +1,30 @@
-모델 상태
+## 모델 상태
 
-✅ 이미 훈련 완료: genconvit_vae_inference.pth 가중치 파일 사용
-✅ 추론 모드: 새로운 데이터로 예측만 수행
+✅ 이미 훈련 완료: genconvit_vae_inference.pth 가중치 파일 사용\
+✅ 추론 모드: 새로운 데이터로 예측만 수행\
 ✅ 가중치 고정: 더 이상 학습할 필요 없음
 
-sample_1.mp4 (입력 비디오)
-    ↓
-extract_frames() → 10개 프레임 추출
-    ↓
-face_rec() → MediaPipe로 각 프레임에서 얼굴 검출
-    ↓
-preprocess_frame() → 224x224 크기로 정규화
-    ↓
-GenConViT 모델 → 프레임별 로짓 예측
-    ↓
+sample_1.mp4 (입력 비디오)\
+    ↓\
+extract_frames() → 10개 프레임 추출\
+    ↓\
+face_rec() → MediaPipe로 각 프레임에서 얼굴 검출\
+    ↓\
+preprocess_frame() → 224x224 크기로 정규화\
+    ↓\
+GenConViT 모델 → 프레임별 로짓 예측\
+    ↓\
 결과 출력: 각 프레임의 FAKE/REAL 확률
 
-2025/08/20
+## 2025/08/20
 현재 dlib는 의존성 문제가 심해서 얼굴 검출 로직을 
 mediapipe으로 교체
 
 py310 환경에서 실행할 수 있도록.
 "conda activate py310"
 
-2025/08/27
-## 🆕 새로운 기능: 프레임별 로짓 분석
 
-### 단일 비디오 프레임별 분석
+## 2025/08/27 
 
 #### **영상 분석**
 ```bash
@@ -72,7 +70,7 @@ python prediction.py --p sample_prediction_data --v --f 10
 - **시각화**: 모델이 집중한 영역을 빨간색 히트맵으로 표시
 
 
-2025/10/26
+## 2025/10/26
 ## 모델 정밀도 평가
 
 ### **전체 데이터셋 평가**
@@ -104,7 +102,7 @@ python prediction.py --evaluate sample_prediction_data_diffusion --v "genconvit_
 - `--e [파일 경로]`: ED 모델을 사용하며, 특정 가중치 파일명을 지정합니다. (경로 생략 시 기본 추론 가중치 사용)
 - `--v [파일 경로]`: VAE 모델을 사용하며, 특정 가중치 파일명을 지정합니다. (경로 생략 시 기본 추론 가중치 사용)
 
-2025/10/27
+## 2025/10/27
 ### **가중치의 학습 로그 확인하기**
 ```bash
 python plot_training_history.py -d weight --no-show # 전체 로그
