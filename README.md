@@ -1,220 +1,132 @@
-# Deepfake Video Detection Using Generative Convolutional Vision Transformer
-Deressa Wodajo, Solomon Atnafu, Zahid Akhtar
+모델 상태
+✅ 이미 훈련 완료: genconvit_vae_inference.pth 가중치 파일 사용
+✅ 추론 모드: 새로운 데이터로 예측만 수행
+✅ 가중치 고정: 더 이상 학습할 필요 없음
 
-This repository contains the implementation code for **Deepfake Video Detection Using Generative Convolutional Vision Transformer (GenConViT)** paper. Find the full paper on arXiv [here](https://arxiv.org/abs/2307.07036).
+sample_1.mp4 (입력 비디오)
+    ↓
+extract_frames() → 10개 프레임 추출
+    ↓
+face_rec() → MediaPipe로 각 프레임에서 얼굴 검출
+    ↓
+preprocess_frame() → 224x224 크기로 정규화
+    ↓
+GenConViT 모델 → 프레임별 로짓 예측
+    ↓
+결과 출력: 각 프레임의 FAKE/REAL 확률
 
-<br/><br/>
-![The Proposed GenConViT Deepfake Detection Framework](img/genconvit.png)
-<p align="center">The Proposed GenConViT Deepfake Detection Framework</p>
 
-<p style="text-align: justify;">
-Deepfakes have raised significant concerns due to their potential to spread false information and compromise digital media integrity. In this work, we propose a Generative Convolutional Vision Transformer (GenConViT) for deepfake video detection. Our model combines ConvNeXt and Swin Transformer models for feature extraction, and it utilizes Autoencoder and Variational Autoencoder to learn from the latent data distribution. By learning from the visual artifacts and latent data distribution, GenConViT achieves improved performance in detecting a wide range of deepfake videos. The model is trained and evaluated on DFDC, FF++, DeepfakeTIMIT, and Celeb-DF v2 datasets, achieving high classification accuracy, F1 scores, and AUC values. The proposed GenConViT model demonstrates robust performance in deepfake video detection, with an average accuracy of 95.8% and an AUC value of 99.3% across the tested datasets. Our proposed model addresses the challenge of generalizability in deepfake detection by leveraging visual and latent features and providing an effective solution for identifying a wide range of fake videos while preserving media integrity.
-</p>
+2025/08/20
+현재 dlib는 의존성 문제가 심해서 얼굴 검출 로직을 
+mediapipe으로 교체!!
 
-## GenConViT Model Architecture
+py310 환경에서 실행할 수 있도록.
+"conda activate py310"
 
-The GenConViT model consists of two independent networks and incorporates the following modules:
-<pre>
-    Autoencoder (ed),
-    Variational Autoencoder (vae), and
-    ConvNeXt-Swin Hybrid layer
-</pre>
+###########################################################################################################
+2025/08/27
+## 🆕 새로운 기능: 프레임별 로짓 분석
 
-The code in this repository enables training and testing of the GenConViT model for deepfake detection.
+### 단일 비디오 프레임별 분석
 
-## Table of Contents
-
-- [Requirements](#requirements)
-- [Usage](#usage)
-  - [Model Training](#model-training)
-  - [Model Testing](#model-testing)
-- [Results](#results)
-
-## Requirements
-<pre>
-    * Python 3.x
-    * PyTorch
-    * numpy
-    * torch
-    * torchvision
-    * tqdm
-    * decord
-    * dlib
-    * opencv
-    * face_recognition
-    * timm
-</pre>
-
-## Usage
-
-1. Clone this repository:
-
+#### **영상 분석**
 ```bash
-git clone https://github.com/erprogs/GenConViT
+python prediction.py --p sample_prediction_data/sample_1.mp4 --f 10
 ```
 
-2. Install the required dependencies:
-
+#### **영상 분석 + GradCAM 시각화**
 ```bash
-pip install -r requirements.txt
+python prediction.py --p sample_prediction_data/sample_1.mp4 --f 10 --gradcam
 ```
 
-## Model Training
+### 🖼️ 단일 이미지 분석 (NEW!)
 
-To train the GenConViT model, follow these steps:
-
-1. Prepare the training data, or use the sample training data provided:
-    * Ensure that the training data is located in the specified directory path.
-    * The training data should be organized in the required format. The `fake` directory contains images that are fake, while the `real` directory contains images that are real.
-<pre>
-    train:
-        - fake
-        - real
-    valid:
-        - fake
-        - real
-    test:
-        - fake
-        - real
-</pre>
- 
-
-2. Run the training script:
-
+#### **이미지 분석**
 ```bash
-python train.py
-    -d <training-data-path>
-    -m <model-variant>
-    -e <num-epochs>
-    -p <pretrained-model-file>
-    -b <batch-size>
-    -t
+python prediction.py --p sample_prediction_data/image.jpg
 ```
 
-`<training-data-path>`: Path to the training data.<br/>
-`<model-variant>`: Specify the model variant (`ed` for Autoencoder or `vae` for Variational Autoencoder).<br/>
-`<num-epochs>`: Number of epochs for training.<br/>
-`<pretrained-model-file>` (optional): Specify the filename of a pretrained model to continue training.<br/>
-`-b` (optional): Batch size for training. Default is 32.<br/>
-`-t` (optional): Run the test on the test dataset after training.
-
-The model weights and metrics are saved in the `weight` folder.
-
-**Example usage:** 
+#### **이미지 + GradCAM 시각화**
 ```bash
-python train.py --d sample_train_data --m vae -e 5 -t y
-```
-```bash
-python train.py --d sample_train_data --m ed --e 5 -t y
+python prediction.py --p sample_prediction_data/image.jpg --gradcam
 ```
 
-## Model Testing
-**Deepfake Detection using GenConViT**
-
-To make prediction using the trained GenConViT model, follow these steps:
-
-1. Download the pretrained model from [Huggingface](https://huggingface.co/Deressa/GenConViT) and save it in the `weight` folder.
-
-Network A (ed) 
+#### 폴더 전체 처리 (배치 처리)
 ```bash
-wget https://huggingface.co/Deressa/GenConViT/resolve/main/genconvit_ed_inference.pth
-```
-Network B (vae)
-```bash
-wget https://huggingface.co/Deressa/GenConViT/resolve/main/genconvit_vae_inference.pth
-```
-
-**Just to save you from a surprise :)**
-
-The provided weights only include the state dictionary. This means that the size of the provided weights is approximately half of what you would get if you trained the model yourself. 
-For example, while the VAE is typically between 5GB and 7GB, the provided one is 2.6GB.
-
-
-2. Run the prediction script:
-
-To run the code, use the following command:
-
-```bash
-python prediction.py \
-    --p <path-to-video-data> \
-    --f <number-of-frames> \
-    --d <dataset> \
-    --e <ed-model-weight-name-(without .pth)> \
-    --v <vae-model-weight-name-(without .pth)> \
-    --fp16 <half-precision>
-```
-  `<path-to-video-data>`: Path to the video data or `[ dfdc, faceforensics, timit, celeb ]`.<br/>
-  `<number-of-frames>`: Specify the number of frames to be extracted for the video prediction. The default is 15 frames.<br/>
-  `<model-variant>`: Specify the model variant (`ed` or `vae` or both:genconvit).<br/>
-  `<dataset>`: the dataset type. `[ dfdc, faceforensics, timit, celeb ]` or yours.<br/>
-  `<half-precision>`: Enable half-precision (float16).
-
-**Example usage:** 
-```bash
-python prediction.py --p DeepfakeTIMIT --d timit --f 10 
-```
-To use VAE or ED variant:
-
-VAE:
-``` 
 python prediction.py --p sample_prediction_data --v --f 10
 ```
 
-ED:
-```
-python prediction.py --p sample_prediction_data --e --f 10
-```
-
-VAE test on DeepfakeTIMIT dataset:
-```
-python prediction.py --p DeepfakeTIMIT --v --d timit --f 10
-```
-run VAE and ED (GENCONVIT): *this runs the provided weights as a defualt*
-
-```
-python prediction.py --p sample_prediction_data --e --v --f 10
-```
-
-**Testing a new model:**
+**옵션 설명:**
+- `--p file_path`: 분석할 비디오/이미지 파일 경로 또는 폴더 경로
+  - **파일 경로**를 주면: 자동으로 단일 파일 분석 모드
+  - **폴더 경로**를 주면: 자동으로 배치 처리 모드 (폴더 내 모든 파일 분석)
+- `--f 10`: 추출할 프레임 수 (비디오만, 기본값: 15)
+- `--gradcam`: GradCAM 시각화 활성화 (단일 파일 분석 시에만 사용 가능)
+- **지원 형식**: `.mp4`, `.avi`, `.mov`, `.jpg`, `.jpeg`, `.png`
 
 
-If you have trained a new model (e.g., if we have `weight/genconvit_vae_May_16_2024_09_34_21.pth`) and want to test it, use the following:
+### GradCAM 시각화 결과
+- **비디오**: 정확도 0.8 이상인 프레임에만 GradCAM 히트맵 생성
+- **이미지**: 모든 이미지에 GradCAM 히트맵 생성
+- **저장 위치**: `result/gradcam_outputs/` 폴더
+- **파일 형식**: 
+  - 비디오: `frame_XX_gradcam.jpg` (XX = 프레임 번호)
+  - 이미지: `image_gradcam.jpg`
+- **시각화**: 모델이 집중한 영역을 빨간색 히트맵으로 표시
 
-VAE:
-```
-python prediction.py --p sample_prediction_data --v genconvit_vae_May_16_2024_09_34_21 --f 10
-```
 
-ED:
-```
-python prediction.py --p sample_prediction_data --e genconvit_ed_May_16_2024_10_18_09 --f 10
-```
+###########################################################################################################
+2025/10/26
+## 🎯 모델 정밀도 평가 (NEW!)
 
-BOTH VAE and ED (GENCONVIT):
-
-```
-python prediction.py --p sample_prediction_data --e genconvit_ed_May_16_2024_10_18_09 --v genconvit_vae_May_16_2024_09_34_21 --f 10
-```
-
-## Results
-
-The results of the model prediction documented in the paper can be found in the `result` directory. 
+### **전체 데이터셋 평가**
 ```bash
-python result_all.py
+# 기본 폴더 : sample_prediction_data
+python prediction.py --evaluate
+
+# 대상 폴더 데이터로 평가 (경로를 바로 지정)
+python prediction.py --evaluate my_data_folder
 ```
 
-## Bibtex
+**옵션 설명:**
+- `--evaluate`: sample_prediction_data의 real/fake 이미지 100장씩으로 모델 정밀도 평가
+- `--e`: ED 모델만 사용하여 평가
+- `--v`: VAE 모델만 사용하여 평가
+- `--fp16`: 반정밀도 사용
+
+
+### **특정 모델로 평가**
 ```bash
-@misc{wodajo2023deepfake,
-      title={Deepfake Video Detection Using Generative Convolutional Vision Transformer}, 
-      author={Deressa Wodajo and Solomon Atnafu and Zahid Akhtar},
-      year={2023},
-      eprint={2307.07036},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
-}
+# ED 모델만 평가
+python prediction.py --evaluate --e
+
+# VAE 모델만 평가  
+python prediction.py --evaluate --v
+
+# 반정밀도로 평가
+python prediction.py --evaluate --fp16
 ```
 
-## Acknowledgement
+### **학습 가중치 성능 평가**
+```bash
+# ED 모델의 특정 가중치로 평가
+python prediction.py --evaluate sample_prediction_data_diffusion --e "genconvit_ed_Oct_28_2025_02_06_15"
 
-This research was funded by Addis Ababa University Research Grant for the Adaptive Problem-Solving Research. Reference number RD/PY-183/2021. Grant number AR/048/2021.
+# VAE 모델의 특정 가중치로 평가
+python prediction.py --evaluate sample_prediction_data_diffusion --v "genconvit_vae_Oct_28_2025_02_08_15"
+```
+
+**핵심 옵션:**
+- `--evaluate [폴더 경로]`: 평가 모드 활성화, 폴더 경로를 지정하면 해당 폴더를 평가 (경로 생략 시 sample_prediction_data 기본값 사용)
+- `--e [파일 경로]`: ED 모델을 사용하며, 특정 가중치 파일명을 지정합니다. (경로 생략 시 기본 추론 가중치 사용)
+- `--v [파일 경로]`: VAE 모델을 사용하며, 특정 가중치 파일명을 지정합니다. (경로 생략 시 기본 추론 가중치 사용)
+
+###########################################################################################################
+2025/10/27
+
+### **가중치의 학습 로그 확인하기**
+```bash
+python plot_training_history.py -d weight --no-show # 전체 로그
+python plot_training_history.py -d weight -m ed --no-show # ed 모델
+python plot_training_history.py -d weight -m vae --no-show # vae 모델
+```

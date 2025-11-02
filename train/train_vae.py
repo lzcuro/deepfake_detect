@@ -22,9 +22,13 @@ def train(
         output, recons = model(images)
         loss_m = criterion(output, targets)
         vae = mse(recons, images)
-        loss = loss_m + vae  # +model.encoder.kl
+        loss = loss_m + vae + model.encoder.kl * model.encoder.kl_weight
 
         loss.backward()
+
+        # Gradient Clipping 추가 (gradient explosion 방지)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        
         optimizer.step()
 
         curr_loss += loss.sum().item()
@@ -74,7 +78,7 @@ def valid(model, device, test_loader, criterion, epoch, valid_loss, valid_acc, m
             output, recons = model(images)
             loss_m = criterion(output, targets)
             vae = mse(recons, images)
-            loss = loss_m + vae  # +model.encoder.kl
+            loss = loss_m + vae + model.encoder.kl * model.encoder.kl_weight
 
             test_loss += loss.sum().item()  # sum up batch loss
 

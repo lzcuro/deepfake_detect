@@ -23,6 +23,10 @@ def train(
         loss = criterion(output, targets)
 
         loss.backward()
+        
+        # Gradient Clipping 추가 (gradient explosion 방지)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        
         optimizer.step()
 
         curr_loss += loss.sum().item()

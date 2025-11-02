@@ -65,20 +65,30 @@ def normalize_data():
     std = [0.229, 0.224, 0.225]
 
     return {
-        "train": transforms.Compose(
-            [Aug(), transforms.ToTensor(), transforms.Normalize(mean, std)]
-        ),
-        "valid": transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize(mean, std)]
-        ),
-        "test": transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize(mean, std)]
-        ),
-        "vid": transforms.Compose([transforms.Normalize(mean, std)]),
+        "train": transforms.Compose([
+            transforms.Resize((224, 224)),  # 모든 이미지를 224x224로 리사이즈
+            Aug(), 
+            transforms.ToTensor(), 
+            transforms.Normalize(mean, std)
+        ]),
+        "valid": transforms.Compose([
+            transforms.Resize((224, 224)),  # 모든 이미지를 224x224로 리사이즈
+            transforms.ToTensor(), 
+            transforms.Normalize(mean, std)
+        ]),
+        "test": transforms.Compose([
+            transforms.Resize((224, 224)),  # 모든 이미지를 224x224로 리사이즈
+            transforms.ToTensor(), 
+            transforms.Normalize(mean, std)
+        ]),
+        "vid": transforms.Compose([
+            transforms.Resize((224, 224)),  # 모든 이미지를 224x224로 리사이즈
+            transforms.Normalize(mean, std)
+        ]),
     }
 
 
-def load_data(data_dir="sample/", batch_size=4):
+def load_data(data_dir, batch_size=4):
     data_dir = data_dir
     image_datasets = {
         x: datasets.ImageFolder(os.path.join(data_dir, x), normalize_data()[x])
@@ -115,7 +125,7 @@ def load_data(data_dir="sample/", batch_size=4):
 
     dataloaders = {
         "train": train_dataloaders,
-        "validation": validation_dataloaders,
+        "valid": validation_dataloaders,  # "validation" → "valid"로 변경
         "test": test_dataloaders,
     }
 
@@ -127,14 +137,22 @@ def load_checkpoint(model, optimizer, filename=None):
     log_loss = 0
     if os.path.isfile(filename):
         print("=> loading checkpoint '{}'".format(filename))
-        checkpoint = torch.load(filename)
-        start_epoch = checkpoint["epoch"]
-        model.load_state_dict(checkpoint["state_dict"])
-        optimizer.load_state_dict(checkpoint["optimizer"])
-        log_loss = checkpoint["min_loss"]
-        print(
-            "=> loaded checkpoint '{}' (epoch {})".format(filename, checkpoint["epoch"])
-        )
+        checkpoint = torch.load(filename, map_location='cpu')
+        
+        # 체크포인트 타입 확인
+        if isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
+            # 완전한 체크포인트 (epoch, optimizer 등 포함)
+            start_epoch = checkpoint.get("epoch", 0)
+            model.load_state_dict(checkpoint["state_dict"])
+            if "optimizer" in checkpoint:
+                optimizer.load_state_dict(checkpoint["optimizer"])
+            log_loss = checkpoint.get("min_loss", 0)
+            print("=> loaded full checkpoint '{}' (epoch {})".format(filename, start_epoch))
+        else:
+            # 모델 가중치만 있는 경우 (inference 모델)
+            print("=> loading model weights only (inference model)")
+            model.load_state_dict(checkpoint)
+            print("=> loaded model weights from '{}'".format(filename))
     else:
         print("=> no checkpoint found at '{}'".format(filename))
 

@@ -1,1 +1,99 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# PyCharm / IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# PyTorch / Machine Learning
+# 모델 가중치 파일 (용량이 크므로 제외, 단 inference 파일은 필요시 포함 가능)
+*.pth
+*.pt
+*.pkl
+*.h5
+*.ckpt
+*.safetensors
+
+# 학습 결과 및 플롯
+weight/plots/
+weight/*.pkl
+weight/*.pth
+!weight/*_inference.pth  # 추론용 가중치는 예외적으로 포함 가능 (선택사항)
+
+# 결과 파일
+result/
+*.json
+!json_file/*.json  # 설정 JSON 파일은 포함
+
+# 데이터셋 (용량이 크고 개인 데이터일 수 있음)
+sample_train_data/
+sample_prediction_data/
+sample_prediction_data_2/
+dataset/raw/
+dataset/processed/
+
+# 로그 및 임시 파일
+*.log
+*.tmp
+*.temp
+문제_해결_*.txt
+프레임별_*.txt
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# 환경 변수
+.env
+.env.local
+.env.*.local
+
+# 기타
+*.swp
+*.swo
 *~
+.cache/
